@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicedoc/tauri/dev/crates/tauri-config-schema/schema.json",
+  "productName": "QuickMD",
+  "version": "0.1.0",
+  "identifier": "com.quickmd.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "QuickMD",
+        "width": 1000,
+        "height": 700,
+        "minWidth": 400,
+        "minHeight": 300,
+        "center": true,
+        "decorations": true,
+        "dragDropEnabled": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https: http: asset:; script-src 'self'; connect-src 'self' ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown", "mdown"],
+        "name": "Markdown Document",
+        "description": "Markdown Document",
+        "role": "Viewer"
+      }
+    ],
+    "category": "Utility",
+    "shortDescription": "A fast Markdown viewer",
+    "longDescription": "QuickMD is a fast, lightweight, cross-platform Markdown viewer that opens instantly and renders beautifully.",
+    "copyright": "MIT",
+    "licenseFile": "../LICENSE"
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "PLACEHOLDER",
+      "endpoints": [
+        "https://github.com/quickmd/quickmd/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}
