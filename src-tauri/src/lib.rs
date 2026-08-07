@@ -10,6 +10,7 @@ use commands::watcher::*;
 use services::settings_manager::SettingsManager;
 use services::recent_files::RecentFiles;
 use std::sync::Mutex;
+use tauri::Emitter;
 use tauri::Manager;
 
 /// Core application state shared across Tauri commands
@@ -32,6 +33,43 @@ pub fn run() {
     };
 
     tauri::Builder::default()
+        // Must be registered first: subsequent launches forward their args here
+        // and exit, so the running instance handles them (single tray icon).
+        .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            // argv[0] is the executable path; the rest are the real CLI args
+            let args: Vec<String> = argv.into_iter().skip(1).collect();
+            let start_hidden = args.iter().any(|a| a == "--hidden" || a == "--tray");
+
+            // Store file path from the new launch for frontend to pick up
+            for arg in &args {
+                if arg.starts_with("--") {
+                    continue;
+                }
+                let path_buf = std::path::PathBuf::from(arg);
+                if path_buf.exists() {
+                    let path_str = path_buf.to_string_lossy().to_string();
+                    log::info!("Single-instance file path queued: {}", path_str);
+                    if let Some(state) = app.try_state::<AppState>() {
+                        if let Ok(mut pending) = state.pending_file.lock() {
+                            *pending = Some(path_str.clone());
+                        }
+                    }
+                    // Tell the already-running frontend to open it
+                    let _ = app.emit("open-file-request", path_str);
+                }
+                break; // Only take the first non-flag argument
+            }
+
+            // Bring the existing window back up (it's hiding in the tray),
+            // unless the new launch was explicitly hidden (e.g. autostart).
+            if !start_hidden {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.unminimize();
+                    let _ = window.set_focus();
+                }
+            }
+        }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::default().build())
