@@ -140,7 +140,7 @@
 {#if isOpen}
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="settings-overlay" onclick={handleClose} role="dialog" aria-label="Settings">
+  <div class="settings-overlay" onclick={handleClose} role="dialog" aria-label="Settings" tabindex="-1">
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="settings-panel" onclick={(e) => e.stopPropagation()}>
@@ -167,8 +167,8 @@
           <h3>Appearance</h3>
 
           <div class="setting-group">
-            <label class="setting-label">Theme</label>
-            <div class="theme-options">
+            <div class="setting-label">Theme</div>
+            <div class="theme-options" role="radiogroup" aria-label="Theme">
               <button class="theme-btn" class:active={theme === "light"} onclick={() => handleThemeChange("light")}>
                 ☀️ Light
               </button>
@@ -189,8 +189,8 @@
           </div>
 
           <div class="setting-group">
-            <label class="setting-label">Font Family</label>
-            <select class="setting-select" value={fontFamily}
+            <label class="setting-label" for="font-family-select">Font Family</label>
+            <select class="setting-select" id="font-family-select" value={fontFamily}
               onchange={(e) => { fontFamily = (e.target as HTMLSelectElement).value; saveSetting("fontFamily", fontFamily); }}>
               {#each fontOptions as opt}
                 <option value={opt.value}>{opt.label}</option>

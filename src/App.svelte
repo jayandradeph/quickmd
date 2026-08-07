@@ -156,7 +156,8 @@
   function handleDrop(ev: DragEvent) {
     ev.preventDefault();
     const files = ev.dataTransfer?.files;
-    if (files?.[0]?.name.match(/\.(md|markdown|mdown)$/i)) openFile(files[0].path);
+    const file = files?.[0] as (File & { path?: string }) | undefined;
+    if (file?.name.match(/\.(md|markdown|mdown)$/i) && file.path) openFile(file.path);
   }
 
   function handleDragover(ev: DragEvent) {
@@ -190,25 +191,29 @@
   }
 
   // ---- Lifecycle ----
-  onMount(async () => {
-    await loadAndApplySettings();
+  onMount(() => {
+    let unlisten1: (() => void) | undefined;
 
-    // Check for pending file from CLI / "Open With"
-    try {
-      const pendingPath = await invoke<string | null>("get_pending_file_path");
-      if (pendingPath) await openFile(pendingPath);
-    } catch { /* no pending file */ }
+    void (async () => {
+      await loadAndApplySettings();
 
-    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-      if (theme === "system") applyTheme("system");
-    });
+      // Check for pending file from CLI / "Open With"
+      try {
+        const pendingPath = await invoke<string | null>("get_pending_file_path");
+        if (pendingPath) await openFile(pendingPath);
+      } catch { /* no pending file */ }
 
-    const unlisten1 = await listen<string>("open-file-request", (e) => openFile(e.payload));
-    await listen("tray-open-file", () => openFile());
-    await listen("tray-open-settings", () => showSettings = true);
-    await loadRecentFiles();
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+        if (theme === "system") applyTheme("system");
+      });
 
-    return () => { unlisten1(); };
+      unlisten1 = await listen<string>("open-file-request", (e) => openFile(e.payload));
+      await listen("tray-open-file", () => openFile());
+      await listen("tray-open-settings", () => showSettings = true);
+      await loadRecentFiles();
+    })();
+
+    return () => { unlisten1?.(); };
   });
 </script>
 
@@ -250,6 +255,7 @@
   {#if showSearch}
     <div class="search-bar">
       <span class="search-icon">🔍</span>
+      <!-- svelte-ignore a11y_autofocus -- autofocus is intentional: Ctrl+F must let the user type immediately -->
       <input type="text" placeholder="Search in document..." bind:value={searchQuery}
         class="search-input" autofocus />
       <button class="search-close" onclick={toggleSearch} title="Close (Escape)">✕</button>

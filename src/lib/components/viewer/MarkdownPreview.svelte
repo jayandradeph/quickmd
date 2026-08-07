@@ -36,6 +36,8 @@
     word-wrap: break-word;
   }
 
+  /* Markdown content is injected via {@html}, so these selectors are global */
+  :global {
   /* ---- Headings ---- */
   .markdown-body h1, .markdown-body h2, .markdown-body h3,
   .markdown-body h4, .markdown-body h5, .markdown-body h6 {
@@ -200,5 +202,6 @@
   }
   :root.dark .markdown-body tr:nth-child(2n) {
     background: #161b22;
+  }
   }
 </style>
